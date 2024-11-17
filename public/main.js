@@ -1,45 +1,55 @@
-var thumbUp = document.getElementsByClassName("fa-thumbs-up");
-var trash = document.getElementsByClassName("fa-trash");
+Array.from(document.querySelectorAll('.fa-pencil')).forEach((element) => {
+  element.addEventListener('click', function () {
+    const oldFood = this.getAttribute('data-food');
+    const description = this.getAttribute('data-description');
+    const price = this.getAttribute('data-price');
 
-Array.from(thumbUp).forEach(function(element) {
-      element.addEventListener('click', function(){
-        const name = this.parentNode.parentNode.childNodes[1].innerText
-        const msg = this.parentNode.parentNode.childNodes[3].innerText
-        const thumbUp = parseFloat(this.parentNode.parentNode.childNodes[5].innerText)
-        fetch('messages', {
-          method: 'put',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            'name': name,
-            'msg': msg,
-            'thumbUp':thumbUp
-          })
+    const newFood = prompt('Update food name:', oldFood);
+    const newDescription = prompt('Update description:', description);
+    const newPrice = prompt('Update price:', price);
+
+    if (newFood && newDescription && newPrice) {
+      fetch('/menuitems', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          oldFood: oldFood,
+          newFood: newFood,
+          description: newDescription,
+          price: newPrice,
+        }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            window.location.reload();
+          } else {
+            console.error('Failed to edit');
+          }
         })
-        .then(response => {
-          if (response.ok) return response.json()
-        })
-        .then(data => {
-          console.log(data)
-          window.location.reload(true)
-        })
-      });
+        .catch((err) => console.error(err));
+    }
+  });
 });
 
-Array.from(trash).forEach(function(element) {
-      element.addEventListener('click', function(){
-        const name = this.parentNode.parentNode.childNodes[1].innerText
-        const msg = this.parentNode.parentNode.childNodes[3].innerText
-        fetch('messages', {
-          method: 'delete',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            'name': name,
-            'msg': msg
-          })
-        }).then(function (response) {
-          window.location.reload()
+
+Array.from(document.querySelectorAll('.fa-trash-o')).forEach((element) => {
+  element.addEventListener('click', function () {
+    const food = this.getAttribute('data-food');
+
+    // if (confirm(`Are you sure you want to delete "${food}"?`)) {
+      fetch('/menuitems', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ food: food }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            window.location.reload();
+          } else {
+            console.error('Failed to delete');
+          }
         })
-      });
+        .catch((err) => console.error(err));
+    }
+   );
 });
