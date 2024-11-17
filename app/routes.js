@@ -9,11 +9,11 @@ module.exports = function(app, passport, db) {
 
     // PROFILE SECTION =========================
     app.get('/profile', isLoggedIn, function(req, res) {
-        db.collection('messages').find().toArray((err, result) => {
+        db.collection('menuitems').find().toArray((err, menuitems) => {
           if (err) return console.log(err)
           res.render('profile.ejs', {
             user : req.user,
-            messages: result
+            menuitems: menuitems
           })
         })
     });
@@ -28,36 +28,49 @@ module.exports = function(app, passport, db) {
 
 // message board routes ===============================================================
 
-    app.post('/messages', (req, res) => {
-      db.collection('messages').save({name: req.body.name, msg: req.body.msg, thumbUp: 0, thumbDown:0}, (err, result) => {
-        if (err) return console.log(err)
-        console.log('saved to database')
-        res.redirect('/profile')
-      })
-    })
+app.post('/menuitems', (req, res) => {
+  db.collection('menuitems').insertOne(
+    {
+      food: req.body.food,
+      description: req.body.description,
+      price: req.body.price,
+    },
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+      console.log('Saved to database');
+      res.redirect('/profile');
+    }
+  );
+});
 
-    app.put('/messages', (req, res) => {
-      db.collection('messages')
-      .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
-        $set: {
-          thumbUp:req.body.thumbUp + 1
-        }
-      }, {
-        sort: {_id: -1},
-        upsert: true
-      }, (err, result) => {
-        if (err) return res.send(err)
-        res.send(result)
-      })
-    })
+// PUT: Edit a Menu Item
+app.put('/menuitems', (req, res) => {
+  db.collection('menuitems').findOneAndUpdate(
+    { food: req.body.oldFood }, // Find item by old food name
+    {
+      $set: {
+        food: req.body.newFood,
+        description: req.body.description,
+        price: req.body.price,
+      },
+    },
+    { sort: { _id: -1 }, upsert: false },
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+      res.send(result);
+    }
+  );
+});
 
-    app.delete('/messages', (req, res) => {
-      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, (err, result) => {
-        if (err) return res.send(500, err)
-        res.send('Message deleted!')
-      })
-    })
-
+app.delete('/menuitems', (req, res) => {
+  db.collection('menuitems').findOneAndDelete(
+    { food: req.body.food },
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+      res.send('Menu item deleted!');
+    }
+  );
+});
 // =============================================================================
 // AUTHENTICATE (FIRST LOGIN) ==================================================
 // =============================================================================
